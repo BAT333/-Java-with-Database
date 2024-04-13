@@ -1,0 +1,214 @@
+Testando conexão no java
+ try {
+            Connection connection = DriverManager
+                    .getConnection("jdbc:mysql://localhost:3306/byte_bank?user=root&password=root");
+
+            System.out.println("Recuperei a conexão");
+
+            connection.close();
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+ Connection-> aqui mostra e retorna a conexão para nos podemos fazer commit, fechar a conexão,
+ mostra a conexão
+
+DriveMabager ->é a responsável por se comunicar com todos os drivers que você deixou disponível.
+Para abrir uma conexão com um banco de dados, precisamos utilizar sempre um driver. A classe
+DriverManager é a responsável por se comunicar com todos os drivers que você deixou disponível.
+
+EM outras palavras ele mostra as conexãos disponivel no seu banco de dados
+
+getConnection-> ele pega a conexão que vc quer nele vc passa url do banco que vc quer pegar onde
+ele esta o nome do banco, senha e usario
+
+SQLException -> caso aconteça algum erro na hora da conexão para ser tratado
+ assim testa a conexão
+
+connection.close(); -> com connection vc esta controlando aqui vc esta dizendo para fechar conexão
+----------------------------------------------------------------------------------------------------------
+CRIANDO CLASS PARA CONEXÃO, E PEGANDO CONEXÃO E RETORNANDO ELA
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class ConnectionFactory {
+
+    public Connection recuperarConexao() {
+        try {
+                return DriverManager
+                .getConnection("jdbc:mysql://localhost:3386/byte_bank?user=root&password=root");
+        } catch (SQLException e) {
+                throw new RuntimeException(e);
+        }
+    }
+}
+SEMPRE QUE VC PRECISAR FAZER QUALQUER COISA NO BANCO DE DADOS VC PRECISA ABRIR UMA CONEXÃO
+PARA EVITAR QUE ABRA ESSA CONEXÃO N VEZES
+CRIA UMA CLASS QUE VC SEMPRE PRECISA RECUPERA CONEXÃO INTANCIA CLASS ConnectionFactor PARA RECUPERA COMEXÃO
+
+E POR PADRONIZAÇÃO SEMPRE COLOCA NOME DE ConnectionFactory
+DEPOIS VC CRIA METODO RECUPERANDO CONEXÃO E RETORNA ESSA CONEXÃO
+-------------------------------------------------------------------------------------------------------------
+PEGANDO E SALVANDO ITEM NO BANCO DE DADOS, E PEGANDO CONEXÃO
+this.connection = new ConnectionFactory();
+
+Connection conn = connection.recuperarConexao();
+
+
+String sql = "INSERT INTO conta (numero, saldo, cliente_nome, cliente_cpf, cliente_email)" +
+                "VALUES (?, ?, ?, ?, ?)";
+
+
+
+try{
+        connection.setAutoCommit(false);
+        PreparedStatement preparedStatement = con.prepareStatement(sql);
+        preparedStatement.setInt(1, conta.getNumero());
+        preparedStatement.setBigDecimal(2, BigDecimal.ZERO);
+        preparedStatement.setString(3,dadosDaConta.dadoscliente().nome());
+        preparedStatement.setString(4,dadosDaConta.dadoscliente().cpf());
+        preparedStatement.setString(5,dadosDaConta.dadosCliente().email());
+        preparedStatement.execute();
+        connection.commit();
+        preparedStatement.close
+        conn.close
+
+} catch (SQLException e) {
+            try {
+                connection.rollback();
+
+            }catch (SQLException ex){
+                throw new RuntimeException(ex);
+            }
+        throw new RuntimeException(e);
+}
+}
+this.connection = new ConnectionFactory() -> aqui intanciamento da class factory para vc sempre chamar a conexão quando precisa
+
+Connection conn = connection.recuperarConexao(); -> aqui como eu disse recuperanado a conexão
+
+String sql -> aqui passa oq vc quer fazer em sql se é salva, deleta, update ou lista tabela
+OS ??? -> SÃO PARAMETROS OU VALORES QUE VC VAI PASSAR PARA NA HORA DE CADASTRA ALGO NA TABELA SÃO PAAMETROS
+
+connection.setAutoCommit(false) -> AQUI FAZ COM QUE EVITE UM COMMIT AUTOMATICO
+SERVE PARA QUANDO DER ERRO NA TABELA NÃO FAZER UM COMMITE COM COISAS ERRADAS
+
+PreparedStatement preparedStatement = con.prepareStatement(sql)-> É METODO USADO PARA CRIAR OBJETOS
+DE INTRODUÇÃO QUE VAI SER USADO NO MYSQL É USADO PARA PREPARA INSTUÇÃO DO BANCO DE DAOS , COM OU SEM
+PARAMELIZAÇÃO
+
+preparedStatement-> É um interface com metodos pre selecionado para passa parametro na query ou sql
+e trocar esse parametro por valor
+para excultar essa essa query ou instrução do banco de dados
+COMO FUNCIONA
+preparedStatement.setInt(1, conta.getNumero());
+usa primeiro set do tipo que vc que colocar no lugar do parametro
+depois vc passa parametro que quer subistituir cada ? representa numero começa do 1 vai para N PARAMETROS QUE VC QUISER
+POR ULTIMO PASSA VALOR QUE VAI COLOCAR NO LUGAR DESTE PARAMETRO
+
+preparedStatement.execute(); ->  AQUI EXCULTA A INSTRUÇÃO QUE VC PEDIU  NO BANCO DE DADOS
+
+connection.commit(); -> AQUI FAZ COMMIT PARA MANDAR SUAS COISA PARA BANCO DE DADOS AS INFOS
+
+
+preparedStatement.close
+conn.close -> AQUI PARA FECHAR CONEXÃO PARA NÃO SOBRE CARREGA BANCO DE DADOS E FECHAR CONEXÃO QUE VC FEZ
+
+connection.rollback() -> CASO ACONTREÇA ALGUM ERRO ESSE METODO CHAMADO PARA ESSE METODO PARA VOLTA PARA
+ULTIMO SALVAMENTO DO BANCO DE DADOS
+---------------------------------------------------------------------------------------------------
+public class ContaDAO {
+
+    private Connection conn;
+
+    ContaDAO(Connection connection) {
+            this.conn = connection;
+    }
+}
+conta dao passsa o connection e service intancia a factory
+----------------------------------------------------------------------------------------------
+RETORNADO VALOR DA TABELA
+public Set<Contas> listar() {
+    Set<Conta> contas = new HashSet<>();
+
+    String sql = "SELECT * FROM conta";
+
+    try{
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ResultSet resultSet = ps.executeQuery();
+            while (resultSet.next()) {
+                Integer numeroRecuperado = resultSet.getInt(1);
+                BigDecimal saldo = resultSet.getBigDecimal(2);
+                String nome = resultSet.getString(3);
+                String cpf = resultSet.getString(4);
+                String email = resultSet.getString(5);
+
+                DadosCadastroCliente dadosCadastroCliente =
+                new DadosCadastroCliente(nome, cpf, email);
+                Cliente cliente = new Cliente(dadosCadastroCliente);
+
+                contas.add(new Conta(numero, cliente));
+                 preparedStatement.close();
+                 conn.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return contas;
+    }
+}
+PRIMEIRO EXPLICANDO POR QUE CLOSSE  preparedStatement QUESTÃO DE CACHE NO BANCO DE DADOS, E AINDA
+SE MANTER ABERTO FAZ COM QUE PEGUE DESPENHO NA SUA APLICAÇÃO ENTÃO TEM FECHAR TUDO QUE DER SEMPRE
+
+ResultSet resultSet = ps.executeQuery()-> SERVE PARA RETORNA VALOR DE UMA TABELA  RETORNA RESULTESET
+E PAR PEGAR CADA LINHA DA TABELA TEM COLOCAR EM FOR
+RESULTSET VAI PASSAR PARA PROXIMO QUANTO TIVER PROXIMO
+E ADD RESULTADO OBETIDO EM LISTA
+-----------------------------------------------------------------------------------------
+
+POOL CONEXÃO
+private HikariDataSource dataSource(){
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:mysql://localhost:3306/cadastro");
+        config.setUsername("root");
+        config.setPassword("Rafael234");
+        config.setMaximumPoolSize(10);
+        return new HikariDataSource(config);
+    }
+BASICAMENTE PARA QUANDO VC TER UMA CONEXÃO SENDO USADO ELE VAI RE APROVEITAR ESSA CONEXÃO
+ANTES DE FECHAR
+BASICAMENTE ISSO FAZ COM QUE CONEXÃOES SE MATENHA ABERTO
+------------------------------------------------------------------------------------------
+ATUALIZAÇÃO
+PreparedStatement statement = connection.prepareStatement("update usuario set nome = ? where id = ?");
+statement.setString(1,client.getName());
+statement.setInt(2,id);
+statement.execute();
+connection.commit();
+statement.close();
+connection.close();
+
+PARA VC UPDATE VC SO PRECISA USAR COMANDO DE UPDATE DO SEU BANCO DE DADOS E USAR OQ VC QUER MUDAR E PARAMETRO DELE
+USAR IGUAL VC FEZ NO SELECT
+----------------------------------------------------------------------------------------------------------
+DELETAR
+ connection.setAutoCommit(false);
+            PreparedStatement statement = connection.prepareStatement("DELETE FROM usuario WHERE id = ?");
+            statement.setInt(1,id);
+            statement.execute();
+            connection.commit();
+            statement.close();
+            connection.close();
+
+
+PARA VC DELETE VC SO PRECISA USAR COMANDO DE DELETE DO SEU BANCO DE DADOS E USAR OQ VC QUER DELETA E OQ VC QUER DELETA E
+COMO
+USAR IGUAL VC FEZ NO SELECT
+
+TEM DELELTE LOGICO QUE BASICAMENTE DELETE QUE DESATIVA SEU SUAS COISAS UM PADRÃO USAR ISSO
+
+
+
+
+
