@@ -34,7 +34,7 @@ public class main {
         manager.getTransaction().commit();
         manager.close();
          */
-        Client client = new Client(" DOIDEIRE OPA ","90","-------------");
+        Client client = new Client(" OPA ","90","-------------");
         ClientService service = new ClientService();
         service.saveClient(client);
         service.listClient().forEach(System.out::println);
