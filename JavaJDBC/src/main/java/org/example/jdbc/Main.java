@@ -7,7 +7,7 @@ import org.example.jdbc.Client.Service.ClientService;
 
 public class Main {
     public static void main(String[] args) {
-        Client client = new Client("ROBERTO","50","RUA JOAQUIM NOBERTO");
+        Client client = new Client("ROBERTO","50","-------------------------");
         ClientService service = new ClientService();
         service.saveClient(client);
        // service.listClient().forEach(System.out::println);

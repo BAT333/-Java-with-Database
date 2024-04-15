@@ -1,0 +1,144 @@
+POR QUE FOI CRIADO A JPA, FOI CRIADO PARA DIMINUIR O GRANDE ACOPLAMENTO QUE TINHA COM CERTO BANCO DE DADOS
+VAMOS IMAGINAR NOS USA MYSQL E OUTRO CLIENTE USA OUTRO TIPO DE BANCO DE DADOS, E PARA MUDAR OS DOIS
+ERA MUITO DEMORADO E OUTRO MOTIVO QUE ERA MUITO VERBOSO ASSIM SE TORNADO DEMORADO CRIAR
+-----------------------------------------------------------------------------------------------------------
+PARA COMEÇAR A USAR JPA PRIMEIRO TEM CONFIGURA O PERSISTENCE
+PRIMEIRO CRIA UMA PASTA NO RESOURCES COMO EXTAMENTE O NOME META-INF E DEPOIS CRIA UM FILE
+PERSISTENCE.XML
+COM A CONFIGURAÇÃO INICIAL ESTA AQUI
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.2"
+             xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd">
+
+
+E DEPOIS CRIA UMA TAG QUE É OBRIGATORIO
+
+ <persistence-unit name="cadastro" transaction-type="RESOURCE_LOCAL">
+  VC DA NOME PARA ELA QUE NO MEU CASO FOI CADASTRO
+  E DEPOIS TIPO DE TRANSACTION
+  RESOURCE_LOCAL -> AQUI SERVIDOR LOCAL
+  JTA-> PARA SERVIDOR DE APLICAÇÃO
+  persistence-unit -> AQUI PARA DIZER QUAL SERVIDOR NOS VAI TRABALHAR PODE TER N SERVIDOR AQUI
+
+
+   <properties>
+              <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+              <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/cadastro"/>
+              <property name="javax.persistence.jdbc.user" value="root"/>
+              <property name="javax.persistence.jdbc.password" value="Rafael234"/>
+              <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
+   </properties>
+   properties-> AS PROPRIEDADE QUE NOS VAMOS USAR JPA
+   PRIMEIRO TIPO QUE VAMOS USAR QUAL BANCO DE DADOS NO MEU CASO MYSQL
+   DEPOIS URL DELE
+   USER
+   E SENHA
+   POR ULTIMO O DIALETO DESTE BANCO
+
+   NO FINAL FICA ASSIM
+
+   <?xml version="1.0" encoding="UTF-8"?>
+   <persistence version="2.2"
+                xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd">
+       <persistence-unit name="cadastro" transaction-type="RESOURCE_LOCAL">
+           <properties>
+               <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+               <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/cadastro"/>
+               <property name="javax.persistence.jdbc.user" value="root"/>
+               <property name="javax.persistence.jdbc.password" value="Rafael234"/>
+               <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
+           </properties>
+
+       </persistence-unit>
+   </persistence>
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ANOTAÇÃO DE MAPEAMENTO DA CLASS
+@Entity -> AQUI MOSTRA QUE CLASS EM JAVA REPRESNTA UMA ENTIDADE NO BANCO DE DADOS OU UMA TABELA
+@Table(name = "produtos")-> AQUI CASO A TABELA NO BANCO DE DADOS É DIFERENTE DA CLASS EM JAVA MUDA NOME
+@Id-> AQUI MOSTRA O ID DO BANCO DE DADOS E SE CHAVE PRIMARIA
+@GeneratedValue(strategy = GenerationType.IDENTITY)-> AQUI PARA MOSTRA A FORMA QUE VAI SER GERADO O ID NO BANCO
+@Enumerated(EnumType.STRING)-> PARA MAPEAR O ENUM -> SALVAR NOME DELE  COM EnumType
+ @ManyToOne
+----------------------------------------------------------------------------------------------------------
+Persistindo uma entidade
+Client client = new Client("CARLOS ROBERTO","50","-------------");
+PRIMEIRO VC INTANCIA O OBJETO QUE VC QUE PERSITIR NO BANCO DE DADOS
+
+
+
+EntityManagerFactory managerFactory = Persistence.createEntityManagerFactory("cadastro");
+Uma fábrica do gerenciador de entidades fornece instâncias do gerenciador de entidades ,
+todas as instâncias são configuradas para se conectar ao mesmo banco de dados
+ELE PEGA O PERSISTENCE E AS CONFIGURAÇÃO DELE FACTORY PARA FAZER CONEXÃO
+
+Persistence-> ESSA CLASS TEM METODO PARA CRIAR A ENTIDADE MENAGER, BASICAMENTE PARA RETONA CONEXÃO
+ELE CRIA COM -> createEntityManagerFactory
+AQUI TEM PASSA A CONFIGURAÇÃO DO BANCO QUE NOS FEZ NO PERSISTENCE, NAME QUE NOS DEMOS QUE NO CASO
+FOI CADASTRO NO MEU
+
+
+EntityManager manager = managerFactory.createEntityManager();
+A API EntityManager pode persistir, atualizar, recuperar ou remover objetos de um banco de dados
+AQUI CRIA ENTIDADEMANAGER ESSE MENAGER PODE MANIPULAR A ENTIDADE NO BANCO DADOS BASICAMENTE
+PARA CRIA ENTIDADE MANAGER
+
+
+NO FINAL FICA ASSIM
+EntityManagerFactory managerFactory = Persistence.createEntityManagerFactory("cadastro");
+EntityManager manager = managerFactory.createEntityManager();
+
+manager.getTransaction().begin(); -> AQUI PEGA A TRANSALAÇÃO, INICIA ELA E COMEÇA
+manager.persist(client); -> AQUI PERSIST NO BANCO DE DADOS -> SALVA E ATE UPDATE
+manager.getTransaction().commit(); -> AQUI FAZ COMMIT E MANDA PARA BANCO DE DADOS
+manager.flush();-> aqui mesma coisa vc manda atualização para banco mas ainda com ela possivel volta managed
+manager.close();-> AQUI FECHA NO BANCO DE DADOS E PRONTO
+manager.clear();-> esse fecha banco mas não completamente assim pode volta e fazer novo commit ou atualização
+ainda com ela possivel volta managed
+Client client1 = manager.find(Client.class,7);-> PARA PESQUISAR POR CLIENTE VC PASSA PRIMEIRO ID O TIPO DE ID DELE E OQ VC QUER QUE ELE RETORNE
+manager.remove(client1);-> PARA REMOVER O DELETAR ALGO DO BANCO PRIMEIRO PESQUISA POR CLINTE E DEPOIS PASSA CLIENTE E DELETA
+PARA ATUALIZAR SO PESQUISAR FAZER AS MUDANÇA E FAZER COMMIT
+
+PARA PESQUISAR PELO FIND() OU CREATEQUERY -> SERVE PARA FAZER PESQUISA RETORNA VALOR
+manager.createQuery("SELECT c FROM Client c",Client.class).getResultList()-> RRTORNA UMA LISTA DO TIPO DO OBJETO QUE VC QUER
+
+Client client2 = manager.merge(client1);
+
+SEMPRE QUE VC DER FLUSH OU CLEAR -> TEM FAZER MERGE -> QUE FAZ VOLTA PARA VC PODER EDITAR ETC
+
+
+
+
+manager.getTransaction().begin();
+manager.persist(client);
+manager.getTransaction().commit();
+----------------------------------------------------------------------------------------------------
+FAZENDO PESQUISA JPQL
+String jpql = "SELECT p FROM Produto p WHERE p.nome = :nome";
+  return em.createQuery(jpql, Produto.class)
+                .setParameter("nome", nome)
+                        .getResultList();
+PESQUISA COM PARAMETRO TEM PASSAR O SETPARAMETER E DA NOME DO PARAMETRO E VARIAVEL QUE VC VAI PASSAR PARA DENTRO DELE
+
+FAZENDO PESQUISA JPQL
+String jpql = "SELECT p FROM Produto p WHERE p.nome = ?1";
+  return em.createQuery(jpql, Produto.class)
+                .setParameter(1, nome)
+                        .getResultList();
+TBM PODE PASSAR PARAMETRO POR NUMERO USANDO ?1 OU QUANTOS VC QUISER E PASSA NO SETPARAMETER 1, NOME
+SE VC QUISER RETORNA UM RESULTADO ESPECIFICO VC TEM COLOCAR TIPO QUE VC QUER RESTORNA E COMO VC QUER ESSE RETORNO
+-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
