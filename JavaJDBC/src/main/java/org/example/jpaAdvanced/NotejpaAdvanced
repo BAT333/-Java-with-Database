@@ -1,0 +1,161 @@
+ANOTAÇÃO E MAPEAMENTO DE TABELA
+@ManyToMany
+SE FOSSE RELACIONAMENTO COMUM QUE SO PRECISA PARA FAZER JOIN
+FARIA ASSIM
+@ManyToMany
+@JoinTable()-> e as configuração dele
+List<Objeto> Objetonome;->
+ex
+pedidos-> class
+produto-> class
+muitos pedidos tem muitos produtos e muitos produtos tem muitos pedidos
+assim na class pedidos
+---------------------------------------------------------------
+@ManyToMany
+@JoinTable()-> e as configuração dele nome, nome das tabela tudo mais
+List<produto> produto;
+-------------------------------------------------------------
+assim ficaria relacionamento de muitos para muitos simples
+-----------------------------------------------------------
+mas quando esse relacionamento precisa de mais infos como data, preco, quantidade, etc
+ai diferente
+ai vc teria que criar
+nova entiade
+como ex
+item pedido fazer relacionamento dela
+@ManyToOne -> muitos item pedidos para um pedido
+Pedido pedido
+
+class pedido
+@OneToMany -> um pedido para muito item
+para mostra que ta mapeado no outro lado tem usar(mappedby= "pedido")
+List<Itempedido> items
+--------------------------------------------------------------------------------------------------
+como boa pratica sempre bom iniciar a list
+e cria metodo de add pedido
+public void adicionarItem(Itempedido item){
+item.setPedido(this);
+this.items.add(item);
+}
+-----------------------------------------------------------
+cascade-> tudo que vc fazer em pedido faz em itempedido
+----------------------------------------------
+quando que vc quer fazer uma pesquisa e retorna coisa diferentes vc tem duas opção
+criar uma intface
+public interface ComproNada {
+    String getNome();
+    String getData();
+    String getCpf();
+    String getVenda();
+}
+mostra como vai ser retorno dele com getNome etc
+ou criar uma class que vai reprensetar esse retorno
+e na pesquisa jpql
+"SELECT new br.com.alura.loja.vo.RelatorioDeVendasVo ()"
+tudo que vc quer pesquisa coloca dentro do parentes
+SELECT new RelatorioDeVendasVo (produto.nome, sum(item.quantidade), max(pedido.data))
+FROM Pedido pedido JOIN
+ex:
+RelatorioDeVendasVo-> construto desta class tem ser compativio se tem 3 string tem ter construtor compativel com 3 Strings
+
+String jpql = "SELECT new br.com.alura.loja.vo.RelatorioDeVendasVo("
+    + "produto.nome, "
+    + "SUM(item.quantidade) as quantidadeTotal, "
+    + "MAX(pedido.data)) "
+    + "FROM Pedido pedido "
+    + "JOIN pedido.itens item "
+    + "JOIN item.produto produto "
+    + "GROUP BY produto.nome "
+    + "ORDER BY quantidadeTotal DESC";
+-------------------------------------------------------------------------------------
+@NamedQuery
+@NamedQuery(name = "produtosPorCategoria", query = "SELECT p FROM PRoduto p WHERE p.categoria.nome = :nome)
+isso coloca diretamente na entidade ou na class respectiva
+
+
+em.createNameQuery("produtosPorCategoria", Produto.class.)
+aqui para pesquisar so chamar metodo e pesquisa dele
+---------------------------------------------------------------------------------------------
+Lazy e Eager
+lazy carregamento lento
+eager -> carregamento ansioso
+por padrão sempre bom deixa lary para não ter impacto na perfomace
+@ManyToOne(Fetch = FetchType.Lazy).
+----------------------------------------------------------------
+vamos supor que vc faz FetchType.Lazy -> na sua api, ou algo do tipo vc não tem controle de close ou não
+então vc quer ainda chamar um atributo mas ja fechou
+para isso vc usar join fetch cria uma query especialmente para chamar esse  atributos e fazer join
+
+em.createQuery("SELECT p FROM Pedido p JOIN FETCH  p.cliente  WHERE p.id = :id", Pedido.class)
+
+
+-------------------------------------------------------------------------------------------------
+para fazer join jpql
+"SELECT u from Usuario u join u.pessoa p where p.matricula = :matricula and u.senha = :senha ", Usuario.class)
+------------------------------------------------------------------------
+consulta com parametro dinamico
+
+public List<Cliente> buscarClientes(String nome, LocalDate dataNascimento) {
+    String jpql = "SELECT c FROM Cliente c WHERE ";
+    if (nome != null && !nome.trim().isEmpty()) {
+        jpql += "AND c.nome = :nome ";
+    }
+    if (dataNascimento != null) {
+        jpql += " AND c.dataNascimento = :dataNascimento ";
+    }
+    TypedQuery<Cliente> query = em.createQuery(jpql, Cliente.class);
+    if (nome != null && !nome.trim().isEmpty()) {
+        query.setParameter("nome", nome);
+    }
+    if (dataNascimento != null) {
+        query.setParameter("dataNascimento", dataNascimento);
+    }
+    return query.getResultList();
+}
+-----------------------------------------------------------------------------------------------------------------------
+para representar que uma class faz parte da mesma entidade na tabela banco de dados
+
+@Embeddable-> aqui fica encima da class
+@Embedded-> aqui no atributo
+----------------------------------------------------------------------------------------------------------------
+PARA HERENÇA
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+AQUI MOSTRA ESTRATEGIA E QUE É  TUDO E UNICA TABELA
+AQUI QUANDO NO BANCO DE DADOS TEM UM TABELA GIGANTE COM TUDO
+E ISSO MOSTA QUE TEM HERENÇA
+ESSA ANOTAÇÃO MOSTA QUE EXISTE HERANÇA DISSO
+NAS CLASS QUE TEM HERANÇA VC TEM COLOCAR @ENTITY
+
+
+@Inheritance(strategy = InheritanceType.JOINED)
+ESSA AQUI CRIA OUTRAS SUB TABELA QUE REPRESETA TUDO UNICO PRODUTO
+CRIA UM MONTE DE TABELA MENOR QUE ID QUE FOR USADO PARA CRIAR NO PRODUTO 1 USA MESMO NO PRODUTO LIVRO
+-------------------------------------------------------------------------------------------------------------
+chave composta
+vc cria nova class
+e usa anotação
+@Embeddable
+e na class principal usa
+@EmbeddedId -> para representar que esses dois são id composto
+
+e normalmente tbm bom usar serializable para serializar fica de boa
+ex
+
+
+
+@Entity
+public class Usuario {
+
+    @EmbeddedId
+    private UsuarioId id;
+}
+
+@Embeddable
+public class UsuarioId implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private String nome;
+    private String cpf;
+
+}
