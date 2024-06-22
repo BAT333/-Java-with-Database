@@ -39,18 +39,18 @@ public class ClientDao {
         List<Client> clients = new ArrayList<>();
         try {
             PreparedStatement statement = connection.prepareStatement("SELECT * FROM usuario");
-           ResultSet set =  statement.executeQuery();
-           while (set.next()){
-               String name = set.getString(2);
-               String age = set.getString(3);
-               String address = set.getString(4);
-               Client client = new Client(name,age,address);
-               clients.add(client);
-           }
-           set.close();
-           statement.close();
-           connection.close();
-           return clients;
+            ResultSet set =  statement.executeQuery();
+            while (set.next()){
+                String name = set.getString(2);
+                String age = set.getString(3);
+                String address = set.getString(4);
+                Client client = new Client(name,age,address);
+                clients.add(client);
+            }
+            set.close();
+            statement.close();
+            connection.close();
+            return clients;
         }catch (SQLException e){
             throw new RuntimeException(e);
         }

@@ -38,7 +38,7 @@ public class main {
         ClientService service = new ClientService();
         service.saveClient(client);
         service.listClient().forEach(System.out::println);
-       service.UpdateClient(5);
+        service.UpdateClient(5);
         service.listClient().forEach(System.out::println);
         //service.deleteClient(9);
 
